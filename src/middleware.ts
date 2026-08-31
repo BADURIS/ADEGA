@@ -51,20 +51,28 @@ export async function middleware(request: NextRequest) {
     }
 
     // Consulta papel de admin via RPC no servidor
-    const { data: isAdmin } = await supabase.rpc('is_admin');
+    const { data: isAdmin, error: isAdminError } = await supabase.rpc('is_admin');
 
-    if (!isAdmin) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
+    if (isAdminError) {
+      console.error('[Middleware] Erro ao verificar papel de admin:', isAdminError.message);
+    }
+
+    if (isAdminError || !isAdmin) {
+      return NextResponse.redirect(new URL('/admin/login?erro=sem_permissao', request.url));
     }
   }
 
   // Redireciona administrador já autenticado que tentar acessar a página de login
   if (isLoginPage && session) {
-    const { data: isAdmin } = await supabase.rpc('is_admin');
+    const { data: isAdmin, error: isAdminError } = await supabase.rpc('is_admin');
+    if (isAdminError) {
+      console.error('[Middleware] Erro ao verificar papel de admin na página de login:', isAdminError.message);
+    }
     if (isAdmin) {
       return NextResponse.redirect(new URL('/admin/dashboard', request.url));
     }
   }
+
 
   return response;
 }

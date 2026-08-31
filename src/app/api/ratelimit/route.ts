@@ -38,7 +38,15 @@ export async function POST(req: NextRequest) {
       { status: 200 }
     );
   } catch (err: unknown) {
-    console.error('[RateLimit API] Erro ao processar verificação:', err);
-    return NextResponse.json({ allowed: true, remaining: 1, resetInSeconds: 0 }, { status: 200 });
+    console.error('[RateLimit API] Erro ao processar verificação (falhando fechado):', err);
+    return NextResponse.json(
+      {
+        allowed: false,
+        error: 'Erro de verificação de limite. Por favor, aguarde alguns instantes e tente novamente.',
+        resetInSeconds: 60,
+      },
+      { status: 429 }
+    );
   }
 }
+

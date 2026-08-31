@@ -137,33 +137,34 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Database update failed' }, { status: 500 });
       }
 
-      // Notificação ao n8n
+      // Notificação ao n8n (envia dados reais sem máscara para disparo do WhatsApp)
       if (process.env.N8N_BASE_URL) {
+        const payloadN8n = {
+          event: 'order_payment_approved',
+          pedido: {
+            id: pedido.id,
+            cliente_nome: pedido.cliente_nome,
+            cliente_whatsapp: pedido.cliente_whatsapp,
+            valor_total: pedido.valor_total,
+            codigo_entrega: pedido.codigo_entrega,
+            status: 'em_preparo',
+          },
+        };
+
         try {
           await fetch(`${process.env.N8N_BASE_URL}/webhook/order-created`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify(
-              sanitizeForLog({
-                event: 'order_payment_approved',
-                pedido: {
-                  id: pedido.id,
-                  cliente_nome: pedido.cliente_nome,
-                  cliente_whatsapp: pedido.cliente_whatsapp,
-                  valor_total: pedido.valor_total,
-                  codigo_entrega: pedido.codigo_entrega,
-                  status: 'em_preparo',
-                },
-              })
-            ),
+            body: JSON.stringify(payloadN8n),
           });
         } catch (n8nErr) {
           console.error('[Webhook MercadoPago] Erro ao notificar n8n:', sanitizeForLog(n8nErr));
         }
       }
     }
+
 
     return NextResponse.json({ success: true, paymentId, mpStatus }, { status: 200 });
   } catch (error: unknown) {

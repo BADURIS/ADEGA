@@ -2,7 +2,8 @@
 
 **Projeto:** TELES ADEGA DELIVERY  
 **DDD / Região:** (13) - Baixada Santista  
-**Contato Oficial:** WhatsApp (13) 99765-0605 | Instagram [@teles.adegadelivery](https://instagram.com/teles.adegadelivery)  
+**Contato Oficial:** WhatsApp (11) 99999-9999 | Instagram [@teles.adegadelivery](https://instagram.com/teles.adega.delivery)  
+
 **Identidade Visual:** Dark Theme (`#0D0D0D`), Amarelo Ouro (`#F59E0B`), Verde WhatsApp (`#22C55E`), Vermelho Alerta (`#EF4444`), Roxo Rota (`#8B5CF6`), Azul Info (`#3B82F6`)  
 **Stack Tecnológica:** Next.js 14/15 (App Router), TypeScript, Tailwind CSS, Supabase (PostgreSQL 15+, Realtime, RLS, Edge Functions / Database Webhooks), n8n Workflow Automation, Geolocation API, Client-side CSV/PDF Engine  
 **Autor:** Engenheiro de Software Sênior (Full-Stack & Database Architect)  

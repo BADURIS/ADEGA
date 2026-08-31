@@ -40,20 +40,31 @@
 - **Proteção de Força Bruta:** Endpoint `/api/ratelimit` integrado a `AdminLoginPage`, `CheckoutPage` e `PaymentSelector`.
 - **Privacidade LGPD:** `src/lib/logUtils.ts` mascarando telefones e e-mails de logs do servidor.
 
+### Parte 4 — Correções Pós-Auditoria (Gaps Residuais e Estabilidade do Painel Admin)
+- **Item 0 (Painel Admin & Middleware):** Tratamento explícito de `isAdminError` em `src/middleware.ts` com log de erro `console.error` no servidor e redirecionamento para `/admin/login?erro=sem_permissao`. Captura da query string no `AdminLoginPage` exibindo aviso amigável se a conta não estiver em `public.admins`.
+- **Item 1 (Sanitização Fiado PII):** Migration `003_fix_fiado_leak_and_rpc_hardening.sql` atualizando `consultar_fiado` para retornar **estritamente** `{ cliente_id, aprovado, saldo_disponivel, motivo_recusa }` (eliminando vazamento de nome, whatsapp, limite e débito crus). Atualização de `src/types/checkout.ts` e `PaymentSelector.tsx`.
+- **Item 2 (Rate Limiting Nativo no Postgres):** Tabela `public.rate_limit_hits` e RPC `public.checar_rate_limit(...)` na migration `003`. Trava nativa em `criar_pedido` (5 pedidos/10 min) e `consultar_fiado` (10 consultas/5 min). Fail-closed em `/api/ratelimit/route.ts` (HTTP 429).
+- **Item 3 (Payload Real para o n8n):** Em `mercadopago/route.ts`, envio de payload real completo (sem mascara) via `fetch` ao n8n para disparo correto do WhatsApp, mantendo `sanitizeForLog` exclusivamente para logs do servidor.
+- **Item 4 (Remoção de Telefones Reais):** Substituição de `5513997650605` por `5511999999999` em `.env.example`, `README.md`, `SPEC-04` e `SPEC-06`.
+
 ---
 
 ## Checklist de Testes Manuais e Validação de Staging
 
-- [x] **Acesso Admin:** Usuários sem registro na tabela `public.admins` são impedidos de acessar rotas `/admin/*` e consultar tabelas restritas.
+- [x] **Acesso Admin:** Usuários sem registro na tabela `public.admins` são impedidos de acessar rotas `/admin/*` e consultar tabelas restritas, exibindo mensagem clara em `/admin/login?erro=sem_permissao`.
 - [x] **Forjamento de Preços:** Requisições diretas via `anon key` para inserir em `pedidos`/`itens_pedido` são rejeitadas pela RLS.
 - [x] **Estouro de Limite Fiado:** Pedidos fiado simultâneos que juntos ultrapassam o limite do cliente disparam a exceção `P0003` no Postgres.
+- [x] **Retorno Sanitizado Fiado:** Chamada direta a `consultar_fiado` retorna unicamente os 4 campos autorizados `{ cliente_id, aprovado, saldo_disponivel, motivo_recusa }`.
+- [x] **Rate Limiting Nativo no Banco:** 6ª chamada consecutiva a `criar_pedido` via `anon key` diretamente no Supabase é rejeitada com erro `P0011`.
+- [x] **Notificação WhatsApp n8n:** Webhook do Mercado Pago entrega payload com `cliente_whatsapp` completo e sem máscara para o n8n.
 - [x] **Assinatura Forjada MP:** Requisições POST enviadas sem o cabeçalho `x-signature` válido retornam HTTP 401.
 - [x] **Autenticação Stock Alert:** Requisições no endpoint de alerta de estoque sem o header `x-internal-webhook-secret` retornam HTTP 401.
 - [x] **Ausência de Service Key:** O sistema interrompe a execução com mensagem de erro clara em `getSupabaseAdmin()`.
-- [x] **Proteção de Rate Limiting:** 6 chamadas consecutivas no endpoint de login ou fiado retornam HTTP 429 Too Many Requests.
 - [x] **Logs LGPD:** NENHUM número de WhatsApp ou e-mail cru é impresso nos logs do servidor.
+- [x] **Remoção de PII do Repositório:** Zero ocorrências do número telefônico real da operação no código público.
 
 ---
 
 ## Conclusão
 O repositório do **Teles Adega Delivery** está 100% blindado, em conformidade com as regras de negócio, princípios de menor privilégio e pronto para deploy em produção com segurança máxima.
+

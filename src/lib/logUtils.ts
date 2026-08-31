@@ -1,3 +1,5 @@
+// USE ISSO APENAS PARA CONSOLE.LOG/CONSOLE.ERROR. NUNCA aplique em payloads de webhooks/integrações de saída que dependem do dado real (ex.: notificação de WhatsApp via n8n).
+
 /**
  * Utilitários para higienização e conformidade de logs (LGPD).
  * Mascara dados sensíveis de clientes (WhatsApp/E-mail) e remove segredos de observabilidade.
@@ -5,9 +7,10 @@
 
 /**
  * Mascara números de telefone/WhatsApp para logs.
- * Exemplo: '5513997650605' -> '5513997***605'
+ * Exemplo: '5511999999999' -> '5511999***999'
  */
 export function maskPhone(phone?: string | null): string {
+
   if (!phone) return '[SEM TELEFONE]';
   const clean = phone.replace(/\D/g, '');
   if (clean.length < 8) return '***';

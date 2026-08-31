@@ -19,12 +19,18 @@ const memoryStore = new Map<string, MemoryRecord>();
 
 /**
  * Avalia se uma determinada ação excedeu o limite de requisições por identificador (IP ou chave de usuário).
- * Tenta utilizar a API HTTP do Upstash Redis se configurado; caso contrário, utiliza fallback em memória.
+ * 
+ * NOTA DE ARQUITETURA & SEGURANÇA:
+ * Esta função e a rota `/api/ratelimit` atuam como CAMADA DE UX (feedback rápido e amigável ao cliente).
+ * A PROTEÇÃO REAL E INVIOLÁVEL reside:
+ * 1. Para 'checkout' (criar_pedido) e 'fiado' (consultar_fiado): Dentro das próprias RPCs PostgreSQL via `public.checar_rate_limit(...)`.
+ * 2. Para 'login': No mecanismo nativo de rate limiting do Supabase Auth no servidor.
  */
 export async function evaluateRateLimit(
   action: 'login' | 'checkout' | 'fiado',
   identifier: string
 ): Promise<{ allowed: boolean; remaining: number; resetInSeconds: number }> {
+
   const config = ACTION_CONFIGS[action] || { maxRequests: 5, windowSeconds: 600 };
   const key = `ratelimit:${action}:${identifier}`;
   const now = Date.now();

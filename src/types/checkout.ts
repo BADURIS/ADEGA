@@ -43,15 +43,13 @@ export interface PaymentFormData {
 }
 
 export interface ClienteFiadoInfo {
-  id: string;
-  nome: string;
-  whatsapp: string;
-  limite_fiado: number;
-  saldo_fiado_atual: number;
-  saldo_disponivel: number;
+  id?: string;
+  cliente_id?: string;
   aprovado: boolean;
+  saldo_disponivel: number;
   motivo_recusa?: string;
 }
+
 
 export interface OrderPayload {
   cliente_id?: string;

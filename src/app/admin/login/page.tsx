@@ -18,6 +18,15 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('erro') === 'sem_permissao') {
+        setErrorMessage('Sua conta não tem permissão de administrador. Contate o responsável pelo sistema.');
+      }
+    }
+  }, []);
+
   const {
     register,
     handleSubmit,
@@ -29,6 +38,7 @@ export default function AdminLoginPage() {
       password: '',
     },
   });
+
 
   const onSubmit = async (values: LoginValues) => {
     setLoading(true);

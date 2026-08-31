@@ -70,26 +70,22 @@ export function PaymentSelector({
         return;
       }
 
-      const limite = Number(resData.limite_fiado || 300);
-      const saldoAtual = Number(resData.saldo_fiado_atual || 0);
       const saldoDisponivel = Number(resData.saldo_disponivel || 0);
       const aprovadoComPedido = resData.aprovado && saldoDisponivel >= valorTotal;
 
       const info: ClienteFiadoInfo = {
         id: resData.cliente_id,
-        nome: resData.nome,
-        whatsapp: resData.whatsapp,
-        limite_fiado: limite,
-        saldo_fiado_atual: saldoAtual,
+        cliente_id: resData.cliente_id,
         saldo_disponivel: saldoDisponivel,
         aprovado: aprovadoComPedido,
         motivo_recusa: aprovadoComPedido
           ? undefined
-          : `Limite ultrapassado. Saldo disponível (R$ ${saldoDisponivel.toFixed(2).replace('.', ',')}) é inferior ao valor do pedido (R$ ${valorTotal.toFixed(2).replace('.', ',')}).`,
+          : resData.motivo_recusa || `Saldo disponível (R$ ${saldoDisponivel.toFixed(2).replace('.', ',')}) é inferior ao valor do pedido (R$ ${valorTotal.toFixed(2).replace('.', ',')}).`,
       };
 
       setFiadoInfo(info);
       onFiadoVerified(info);
+
     } catch (err: unknown) {
       console.error('Erro ao consultar cadastro fiado via RPC:', err);
       setErroFiado('Erro ao consultar cadastro. Tente novamente.');
@@ -265,21 +261,15 @@ export function PaymentSelector({
               }`}
             >
               <div className="flex items-center justify-between font-bold text-sm">
-                <span>Cliente: {fiadoInfo.nome}</span>
+                <span>Status do Cadastro</span>
                 <span className={fiadoInfo.aprovado ? 'text-[#22C55E]' : 'text-red-400'}>
                   {fiadoInfo.aprovado ? '✓ Crédito Aprovado' : '✕ Bloqueado'}
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-zinc-300 pt-2 border-t border-zinc-800">
-                <div>
-                  <span className="text-zinc-500 block">Limite Total:</span>
-                  <span className="font-bold">R$ {fiadoInfo.limite_fiado.toFixed(2).replace('.', ',')}</span>
-                </div>
-                <div>
-                  <span className="text-zinc-500 block">Saldo Utilizado:</span>
-                  <span className="font-bold">R$ {fiadoInfo.saldo_fiado_atual.toFixed(2).replace('.', ',')}</span>
-                </div>
+              <div className="text-zinc-300 pt-2 border-t border-zinc-800">
+                <span className="text-zinc-500 block">Saldo Disponível para Compras:</span>
+                <span className="font-bold text-sm text-white">R$ {fiadoInfo.saldo_disponivel.toFixed(2).replace('.', ',')}</span>
               </div>
 
               {!fiadoInfo.aprovado && (
@@ -287,6 +277,7 @@ export function PaymentSelector({
               )}
             </div>
           )}
+
         </div>
       )}
     </div>

@@ -2,7 +2,8 @@
 
 **Projeto:** TELES ADEGA DELIVERY  
 **DDD / Região:** (13) - Baixada Santista  
-**Contato Oficial:** WhatsApp (13) 99765-0605 | Instagram [@teles.adegadelivery](https://instagram.com/teles.adegadelivery)  
+**Contato Oficial:** WhatsApp (11) 99999-9999 | Instagram [@teles.adegadelivery](https://instagram.com/teles.adega.delivery)  
+
 **Stack de Dados:** Supabase (PostgreSQL 15+ | Realtime | RLS | Storage)  
 **Autor:** Engenheiro de Software Sênior (Database & Architecture Specialist)  
 **Versão:** 1.0.0  
