@@ -47,6 +47,15 @@
 - **Item 3 (Payload Real para o n8n):** Em `mercadopago/route.ts`, envio de payload real completo (sem mascara) via `fetch` ao n8n para disparo correto do WhatsApp, mantendo `sanitizeForLog` exclusivamente para logs do servidor.
 - **Item 4 (Remoção de Telefones Reais):** Substituição de `5513997650605` por `5511999999999` em `.env.example`, `README.md`, `SPEC-04` e `SPEC-06`.
 
+### Parte 5 — Melhorias no Site do Cliente (Prompt 1)
+- **Remoção de Mocks:** `PRODUTOS_MOCK` removido completamente de `ProductGrid.tsx`. O banco de dados Supabase é a única fonte da verdade para produtos e vitrine.
+- **Autorização Fiado por Cliente:** Coluna `fiado_autorizado` na tabela `clientes` (migration `004_storefront_client_improvements.sql`). Opcional de Fiado oculto no checkout e bloqueado na RPC se `fiado_autorizado = false`.
+- **Regra de Troco Corrigida:** O valor "Troco para quanto?" representa o valor em dinheiro entregue (`trocoPara > total`). Rejeição imediata se `trocoPara <= total` tanto na UI quanto no Postgres (`criar_pedido`).
+- **Validação de CEPs Atendidos:** Tabela `public.ceps_atendidos` no Postgres consultada por `buscarCep` em `viaCep.ts`. Bloqueio de CEPs não cadastrados ou inativos no checkout.
+- **Horário Dinâmico com Meia-Noite:** Módulo `src/lib/storeStatus.ts` tratando horários que atravessam meia-noite (ex.: 18:00 às 02:00 -> ABERTO entre 18:00–23:59 e 00:00–02:00) e alimentando o badge 🟢 ABERTO / 🔴 ENCERRADA no `Header.tsx`.
+- **Performance & Imagens:** Next.js `<Image>` com `priority={isPriority}` nos primeiros cards da viewport e lazy-loading nos demais.
+
+
 ---
 
 ## Checklist de Testes Manuais e Validação de Staging

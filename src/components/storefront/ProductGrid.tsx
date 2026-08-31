@@ -11,127 +11,6 @@ export interface ProductGridProps {
   initialProdutos?: Produto[];
 }
 
-// Produtos Mock de alta qualidade para fallback instantâneo caso a tabela do Supabase esteja vazia ou em setup inicial
-const PRODUTOS_MOCK: Produto[] = [
-  {
-    id: 'prod-1',
-    categoria_id: 'cervejas',
-    nome: 'Heineken Long Neck 330ml (Gelada)',
-    descricao: 'Cerveja Premium Lager puro malte refrescante trincando de gelada.',
-    preco: 9.90,
-    preco_original: 9.90,
-    preco_vigente: 7.90,
-    em_promocao: true,
-    percentual_desconto: 20,
-    foto_url: '/products/heineken-long-neck.png',
-    estoque_atual: 48,
-    estoque_minimo: 10,
-    ativo: true,
-    destaque: true,
-  },
-  {
-    id: 'prod-2',
-    categoria_id: 'cervejas',
-    nome: 'Amstel Cerveja Lata 350ml',
-    descricao: 'Cerveja Puro Malte receita holandesa tradicional.',
-    preco: 4.50,
-    preco_original: 4.50,
-    preco_vigente: 4.50,
-    em_promocao: false,
-    foto_url: '/products/amstel-lata.png',
-    estoque_atual: 120,
-    estoque_minimo: 20,
-    ativo: true,
-  },
-  {
-    id: 'prod-3',
-    categoria_id: 'destilados',
-    nome: 'Whisky Red Label 1L',
-    descricao: 'Whisky Escocês Johnnie Walker Red Label Garrafa 1 Litro.',
-    preco: 99.90,
-    preco_original: 99.90,
-    preco_vigente: 99.90,
-    em_promocao: false,
-    foto_url: '/products/red-label-whisky.png',
-    estoque_atual: 5,
-    estoque_minimo: 6,
-    ativo: true,
-    destaque: true,
-  },
-  {
-    id: 'prod-4',
-    categoria_id: 'destilados',
-    nome: 'Vodka Absolut Original 1L',
-    descricao: 'Vodka Sueca pura e refinada 1 Litro.',
-    preco: 84.90,
-    preco_original: 84.90,
-    preco_vigente: 84.90,
-    em_promocao: false,
-    foto_url: '/products/absolut-vodka.png',
-    estoque_atual: 12,
-    estoque_minimo: 5,
-    ativo: true,
-  },
-  {
-    id: 'prod-5',
-    categoria_id: 'energeticos',
-    nome: 'Energético Red Bull Energy Drink 250ml',
-    descricao: 'Red Bull te dá asas. Lata 250ml gelada.',
-    preco: 11.90,
-    preco_original: 11.90,
-    preco_vigente: 11.90,
-    em_promocao: false,
-    foto_url: '/products/red-bull-can.png',
-    estoque_atual: 30,
-    estoque_minimo: 10,
-    ativo: true,
-  },
-  {
-    id: 'prod-6',
-    categoria_id: 'gelo-saborizado',
-    nome: 'Gelo Saborizado Coco com Limão 200g',
-    descricao: 'Gelo saborizado para drinks de gin e whisky.',
-    preco: 4.90,
-    preco_original: 4.90,
-    preco_vigente: 4.90,
-    em_promocao: false,
-    foto_url: '/products/gelo-saborizado-coco-limao.png',
-    estoque_atual: 40,
-    estoque_minimo: 15,
-    ativo: true,
-  },
-  {
-    id: 'prod-7',
-    categoria_id: 'combos',
-    nome: 'Combo Cavalo Branco + 4 Red Bull',
-    descricao: '1 Garrafa Whisky White Horse 1L + 4 Energéticos Red Bull 250ml.',
-    preco: 139.90,
-    preco_original: 139.90,
-    preco_vigente: 109.90,
-    em_promocao: true,
-    percentual_desconto: 21,
-    foto_url: '/products/combo-cavalo-branco-redbull.png',
-    estoque_atual: 8,
-    estoque_minimo: 3,
-    ativo: true,
-    destaque: true,
-  },
-  {
-    id: 'prod-8',
-    categoria_id: 'cervejas',
-    nome: 'Cerveja Corona Extra 330ml',
-    descricao: 'Cerveja tipo American Adjunct Lager.',
-    preco: 8.90,
-    preco_original: 8.90,
-    preco_vigente: 8.90,
-    em_promocao: false,
-    foto_url: '/products/corona-extra.png',
-    estoque_atual: 0,
-    estoque_minimo: 5,
-    ativo: true,
-  },
-];
-
 export const ProductGrid: React.FC<ProductGridProps> = ({
   selectedCategorySlug,
   initialProdutos,
@@ -162,16 +41,14 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
           return;
         }
 
-        // Fallback para tabela padrão caso a view não exista ainda no banco
+        // Fallback para a tabela oficial de produtos caso a view ainda não tenha sido compilada
         const { data, error } = await supabase
           .from('produtos')
           .select('*')
           .eq('ativo', true)
           .order('destaque', { ascending: false });
 
-        if (error || !data || data.length === 0) {
-          setProdutos(PRODUTOS_MOCK);
-        } else {
+        if (!error && data && data.length > 0) {
           setProdutos(
             (data as Record<string, unknown>[]).map((p) => ({
               ...(p as unknown as Produto),
@@ -181,10 +58,12 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
               percentual_desconto: 0,
             }))
           );
+        } else {
+          setProdutos([]);
         }
       } catch (err) {
         console.error('Erro ao buscar produtos no Supabase:', err);
-        setProdutos(PRODUTOS_MOCK);
+        setProdutos([]);
       } finally {
         setLoading(false);
       }
@@ -225,10 +104,10 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
             ))}
           </div>
         ) : produtosFiltrados.length > 0 ? (
-          /* Grid de Produtos */
+          /* Grid de Produtos Oficiais do Banco */
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {produtosFiltrados.map((produto) => (
-              <ProductCard key={produto.id} produto={produto} />
+            {produtosFiltrados.map((produto, idx) => (
+              <ProductCard key={produto.id} produto={produto} isPriority={idx < 4} />
             ))}
           </div>
         ) : (

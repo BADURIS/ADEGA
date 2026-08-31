@@ -4,34 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingBag, MessageCircle } from 'lucide-react';
 import { useCartStore, selectCartItemCount } from '@/store/useCartStore';
 import { useHydrated } from '@/hooks/useHydrated';
+import { checkStoreOpeningStatus, StoreStatusResult } from '@/lib/storeStatus';
+import { supabase } from '@/services/supabaseClient';
 
 export interface HeaderProps {
   onOpenCart?: () => void;
-}
-
-/**
- * Funçao auxiliar para checar se a adega está aberta.
- * Regra: Quinta a Domingo, das 18h às 03h da manhã seguinte.
- */
-function checkIsStoreOpen(): boolean {
-  const now = new Date();
-  const day = now.getDay(); // 0 = Domingo, 1 = Segunda, ..., 4 = Quinta, 5 = Sexta, 6 = Sábado
-  const hour = now.getHours();
-
-  // Dias ativos de abertura: Quinta (4), Sexta (5), Sábado (6), Domingo (0)
-  // Das 18h às 23h59
-  if ([4, 5, 6, 0].includes(day) && hour >= 18) {
-    return true;
-  }
-
-  // Das 00h às 03h da madrugada (referente às noites de Quinta, Sexta, Sábado ou Domingo)
-  // Se for Quinta de madrugada (dia 4, 00h-03h), refere-se à noite de Quarta.
-  // Se for Sexta (5), Sábado (6), Domingo (0) ou Segunda (1) das 00h às 03h:
-  if ([5, 6, 0, 1].includes(day) && hour < 3) {
-    return true;
-  }
-
-  return false;
 }
 
 export const Header: React.FC<HeaderProps> = ({ onOpenCart }) => {
@@ -39,10 +16,30 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart }) => {
   const rawItemCount = useCartStore(selectCartItemCount);
   const itemCount = hydrated ? rawItemCount : 0;
 
-  const [isOpen, setIsOpen] = useState<boolean>(true);
+  const [status, setStatus] = useState<StoreStatusResult>(() => checkStoreOpeningStatus());
 
   useEffect(() => {
-    setIsOpen(checkIsStoreOpen());
+    async function loadStoreConfig() {
+      try {
+        const { data } = await supabase.from('configuracoes_adega').select('chave, valor');
+        if (data && data.length > 0) {
+          const configMap: Record<string, string> = {};
+          data.forEach((item) => {
+            configMap[item.chave] = item.valor;
+          });
+
+          const ab = configMap['horario_abertura'] || '18:00';
+          const fe = configMap['horario_fechamento'] || '02:00';
+          const st = (configMap['status_manual'] as any) || 'auto';
+
+          setStatus(checkStoreOpeningStatus(ab, fe, st));
+        }
+      } catch (err) {
+        console.error('Erro ao buscar configurações de horário:', err);
+      }
+    }
+
+    loadStoreConfig();
   }, []);
 
   return (
@@ -64,20 +61,22 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart }) => {
             </div>
           </a>
 
-          {/* Badge de Status da Loja */}
-          <div className="hidden items-center gap-1.5 rounded-full border border-[#262626] bg-[#161616] px-3 py-1 text-xs font-medium sm:flex">
-            {isOpen ? (
+          {/* Badge de Status Dinâmico da Loja (Com suporte a travessia de meia-noite) */}
+          <div
+            className={`hidden items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold sm:flex ${status.badgeCor}`}
+          >
+            {status.aberto ? (
               <>
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
                 </span>
-                <span className="text-emerald-400">Aberto Agora</span>
+                <span>{status.statusTexto} • {status.horarioTexto}</span>
               </>
             ) : (
               <>
                 <span className="h-2 w-2 rounded-full bg-rose-500"></span>
-                <span className="text-zinc-400">Abre às 18h</span>
+                <span>{status.statusTexto} • {status.horarioTexto}</span>
               </>
             )}
           </div>

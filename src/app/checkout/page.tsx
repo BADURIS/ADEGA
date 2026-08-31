@@ -73,11 +73,12 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Validação de troco
-    if (formaPagamento === 'dinheiro' && trocoPara !== undefined && trocoPara > 0 && trocoPara < total) {
-      setErrorMessage(`O valor informado para troco (R$ ${trocoPara.toFixed(2)}) deve ser maior ou igual ao valor total do pedido (R$ ${total.toFixed(2)}).`);
+    // Validação de troco em dinheiro (trocoPara deve ser estritamente maior que o total)
+    if (formaPagamento === 'dinheiro' && trocoPara !== undefined && trocoPara > 0 && trocoPara <= total) {
+      setErrorMessage(`O valor informado para troco entregue em dinheiro (R$ ${trocoPara.toFixed(2)}) deve ser maior que o valor total do pedido (R$ ${total.toFixed(2)}). Se não precisar de troco, deixe em branco.`);
       return;
     }
+
 
     // Validação de fiado
     if (formaPagamento === 'fiado') {

@@ -101,7 +101,15 @@ export function PaymentSelector({
     formaPagamento === 'dinheiro' &&
     trocoPara !== undefined &&
     trocoPara > 0 &&
-    trocoPara < valorTotal;
+    trocoPara <= valorTotal;
+
+  const trocoCalculado =
+    formaPagamento === 'dinheiro' &&
+    trocoPara !== undefined &&
+    trocoPara > valorTotal
+      ? trocoPara - valorTotal
+      : null;
+
 
   return (
     <div className="bg-[#161616] border border-[#262626] rounded-2xl p-5 md:p-6 shadow-xl space-y-5">
@@ -204,11 +212,25 @@ export function PaymentSelector({
 
           {trocoInvalido && (
             <p className="text-xs text-red-400 flex items-center gap-1">
-              <ShieldAlert className="w-3.5 h-3.5" />
-              O valor para troco deve ser maior ou igual ao total do pedido (R${' '}
-              {valorTotal.toFixed(2).replace('.', ',')}).
+              <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+              <span>
+                O valor entregue em dinheiro para troco (R${' '}
+                {trocoPara?.toFixed(2).replace('.', ',')}) deve ser maior que o total do pedido (R${' '}
+                {valorTotal.toFixed(2).replace('.', ',')}). Se não precisar de troco, deixe o campo em branco.
+              </span>
             </p>
           )}
+
+          {trocoCalculado !== null && (
+            <p className="text-xs text-emerald-400 flex items-center gap-1 font-semibold">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              <span>
+                Troco a ser entregue pelo motoboy: R${' '}
+                {trocoCalculado.toFixed(2).replace('.', ',')}
+              </span>
+            </p>
+          )}
+
         </div>
       )}
 

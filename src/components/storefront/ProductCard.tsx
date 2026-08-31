@@ -9,9 +9,10 @@ import { useHydrated } from '@/hooks/useHydrated';
 
 export interface ProductCardProps {
   produto: Produto;
+  isPriority?: boolean;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ produto }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ produto, isPriority = false }) => {
   const hydrated = useHydrated();
   const itens = useCartStore((state) => state.itens);
   const addItem = useCartStore((state) => state.addItem);
@@ -97,10 +98,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ produto }) => {
             src={produto.foto_url}
             alt={produto.nome}
             fill
+            priority={isPriority}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="object-contain transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
+
           <div className="flex flex-col items-center justify-center text-zinc-600">
             <Wine className="h-12 w-12 stroke-[1.5]" />
             <span className="text-[10px] uppercase font-bold mt-1 text-zinc-600">Adega Teles</span>

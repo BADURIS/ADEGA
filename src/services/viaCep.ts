@@ -13,20 +13,24 @@ export async function buscarCep(cep: string): Promise<BuscarCepResult> {
       uf: '',
       taxaEntrega: 0,
       bairroEncontrado: false,
-      mensagemErro: 'CEP inválido. Deve conter 8 dígitos.',
+      mensagemErro: 'CEP inválido. Deve conter 8 dígitos numerados.',
     };
   }
 
   try {
+    // 1. Checar primeiro se o CEP exato consta na tabela oficial de ceps_atendidos do banco
+    const { data: cepsCadastrados } = await supabase
+      .from('ceps_atendidos')
+      .select('cep, bairro, valor_frete, ativo')
+      .eq('cep', cleanedCep)
+      .eq('ativo', true)
+      .limit(1);
+
+    // Buscar dados de logradouro no ViaCEP para preenchimento de formulário
     const response = await fetch(`https://viacep.com.br/ws/${cleanedCep}/json/`);
-    
-    if (!response.ok) {
-      throw new Error('Falha ao conectar com o serviço ViaCEP.');
-    }
+    const dataViaCep: ViaCepResponse = response.ok ? await response.json() : {};
 
-    const data: ViaCepResponse = await response.json();
-
-    if (data.erro) {
+    if (dataViaCep.erro && (!cepsCadastrados || cepsCadastrados.length === 0)) {
       return {
         sucesso: false,
         logradouro: '',
@@ -39,26 +43,44 @@ export async function buscarCep(cep: string): Promise<BuscarCepResult> {
       };
     }
 
-    const logradouro = data.logradouro || '';
-    const bairro = data.bairro || '';
-    const cidade = data.localidade || '';
-    const uf = data.uf || '';
+    const logradouro = dataViaCep.logradouro || '';
+    const bairro = dataViaCep.bairro || (cepsCadastrados?.[0]?.bairro ?? '');
+    const cidade = dataViaCep.localidade || 'Santos';
+    const uf = dataViaCep.uf || 'SP';
 
     let taxaEntrega = 0;
-    let bairroEncontrado = false;
+    let cepAtendido = false;
 
-    if (bairro) {
-      const { data: zonas, error } = await supabase
+    // Se o CEP específico estiver cadastrado e ativo
+    if (cepsCadastrados && cepsCadastrados.length > 0) {
+      taxaEntrega = Number(cepsCadastrados[0].valor_frete);
+      cepAtendido = true;
+    } else if (bairro) {
+      // Fallback para zonas_frete por bairro
+      const { data: zonas } = await supabase
         .from('zonas_frete')
         .select('valor_frete, bairro')
         .ilike('bairro', `%${bairro}%`)
         .eq('ativo', true)
         .limit(1);
 
-      if (!error && zonas && zonas.length > 0) {
+      if (zonas && zonas.length > 0) {
         taxaEntrega = Number(zonas[0].valor_frete);
-        bairroEncontrado = true;
+        cepAtendido = true;
       }
+    }
+
+    if (!cepAtendido) {
+      return {
+        sucesso: false,
+        logradouro,
+        bairro,
+        cidade,
+        uf,
+        taxaEntrega: 0,
+        bairroEncontrado: false,
+        mensagemErro: 'A Teles Adega não realiza entregas para este CEP no momento. Entre em contato via WhatsApp para consultar taxa especial.',
+      };
     }
 
     return {
@@ -68,10 +90,7 @@ export async function buscarCep(cep: string): Promise<BuscarCepResult> {
       cidade,
       uf,
       taxaEntrega,
-      bairroEncontrado,
-      mensagemErro: bairroEncontrado
-        ? undefined
-        : 'Bairro não cadastrado em nossa área de entrega padrão. Entre em contato via WhatsApp para consultar frete especial.',
+      bairroEncontrado: true,
     };
   } catch (error: unknown) {
     const errMessage = error instanceof Error ? error.message : 'Erro ao buscar o CEP. Tente novamente.';
