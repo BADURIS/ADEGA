@@ -1,0 +1,68 @@
+@import "leaflet/dist/leaflet.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Custom Radar & Leaflet Map Styling */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  background-color: #0d0d0d !important;
+  font-family: inherit;
+  z-index: 10;
+}
+
+.leaflet-tile {
+  filter: brightness(0.8) invert(1) contrast(1.5) hue-rotate(180deg) saturate(0.3) !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: #161616 !important;
+  color: #ffffff !important;
+  border: 1px solid #262626 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+.leaflet-popup-tip {
+  background: #161616 !important;
+}
+
+@keyframes pulseRadar {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+.radar-pulse {
+  animation: pulseRadar 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
