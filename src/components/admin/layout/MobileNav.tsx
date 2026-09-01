@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Bike, Wallet, Package, Users, Sparkles, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Bike, Package, Users, MapPin, Clock } from 'lucide-react';
 
 const NAV_ITEMS = [
   {
@@ -17,19 +17,9 @@ const NAV_ITEMS = [
     icon: Bike,
   },
   {
-    label: 'Caixa',
-    href: '/admin/entregas/caixa',
-    icon: Wallet,
-  },
-  {
     label: 'Produtos',
     href: '/admin/produtos',
     icon: Package,
-  },
-  {
-    label: 'Promoções',
-    href: '/admin/promocoes',
-    icon: Sparkles,
   },
   {
     label: 'Clientes',
@@ -37,9 +27,14 @@ const NAV_ITEMS = [
     icon: Users,
   },
   {
-    label: 'Relatórios',
-    href: '/admin/relatorios',
-    icon: BarChart3,
+    label: 'CEPs',
+    href: '/admin/ceps',
+    icon: MapPin,
+  },
+  {
+    label: 'Horário',
+    href: '/admin/horarios',
+    icon: Clock,
   },
 ];
 

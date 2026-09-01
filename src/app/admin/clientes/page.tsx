@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Users, Search, DollarSign, Loader2, CheckCircle2, X } from 'lucide-react';
+import { Users, Search, DollarSign, Loader2, CheckCircle2, X, ShieldAlert, ToggleLeft, ToggleRight } from 'lucide-react';
 import { supabase } from '@/services/supabaseClient';
 
 export interface Cliente {
@@ -12,6 +12,7 @@ export interface Cliente {
   endereco_completo?: string;
   limite_fiado: number;
   saldo_fiado_atual: number;
+  fiado_autorizado?: boolean;
   ativo?: boolean;
 }
 
@@ -19,6 +20,7 @@ export default function AdminClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [updatingFiadoId, setUpdatingFiadoId] = useState<string | null>(null);
 
   // Modal para dar baixa em Fiado
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
@@ -47,6 +49,40 @@ export default function AdminClientesPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Alternar autorização de Fiado (ON / OFF)
+  const handleToggleFiadoAutorizado = async (clienteId: string, statusAtual = true) => {
+    setUpdatingFiadoId(clienteId);
+    const novoStatus = !statusAtual;
+
+    // Atualização otimista no estado local
+    setClientes((prev) =>
+      prev.map((c) => (c.id === clienteId ? { ...c, fiado_autorizado: novoStatus } : c))
+    );
+
+    try {
+      const { error } = await supabase
+        .from('clientes')
+        .update({
+          fiado_autorizado: novoStatus,
+          atualizado_em: new Date().toISOString(),
+        })
+        .eq('id', clienteId);
+
+      if (error) {
+        // Reverter se falhar
+        setClientes((prev) =>
+          prev.map((c) => (c.id === clienteId ? { ...c, fiado_autorizado: statusAtual } : c))
+        );
+        alert(`Erro ao atualizar autorização de fiado: ${error.message}`);
+      }
+    } catch (err: unknown) {
+      const errMessage = err instanceof Error ? err.message : 'Erro ao atualizar';
+      alert(`Erro: ${errMessage}`);
+    } finally {
+      setUpdatingFiadoId(null);
+    }
+  };
 
   const handleDarBaixaFiado = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,7 +141,7 @@ export default function AdminClientesPage() {
             Gestão de Clientes & Conta Fiado
           </h1>
           <p className="text-xs text-zinc-400">
-            Acompanhamento de histórico de vendas, saldo devedor e recebimentos
+            Controle de cadastros, liberação de compra no Fiado e abatimento de saldo devedor
           </p>
         </div>
 
@@ -134,6 +170,7 @@ export default function AdminClientesPage() {
                   <th className="py-3.5 px-4">Cliente</th>
                   <th className="py-3.5 px-4">WhatsApp</th>
                   <th className="py-3.5 px-4">Bairro / Endereço</th>
+                  <th className="py-3.5 px-4">Autorizado Fiado</th>
                   <th className="py-3.5 px-4">Limite Fiado</th>
                   <th className="py-3.5 px-4">Saldo Devedor</th>
                   <th className="py-3.5 px-4 text-right">Ações</th>
@@ -142,16 +179,47 @@ export default function AdminClientesPage() {
               <tbody className="divide-y divide-[#262626]">
                 {filteredClientes.map((c) => {
                   const possuiDebito = Number(c.saldo_fiado_atual) > 0;
+                  const isAutorizado = c.fiado_autorizado !== false; // Padrão é autorizado true
 
                   return (
                     <tr key={c.id} className="hover:bg-[#222222]/50 transition">
                       <td className="py-3 px-4 font-bold text-white">{c.nome}</td>
                       <td className="py-3 px-4 font-mono text-zinc-300">{c.whatsapp}</td>
                       <td className="py-3 px-4 text-zinc-400">
-                        {c.bairro} ({c.endereco_completo})
+                        {c.bairro ? `${c.bairro} (${c.endereco_completo || ''})` : c.endereco_completo || '-'}
                       </td>
+
+                      {/* Coluna Toggle de Autorização de Fiado */}
+                      <td className="py-3 px-4">
+                        <button
+                          type="button"
+                          disabled={updatingFiadoId === c.id}
+                          onClick={() => handleToggleFiadoAutorizado(c.id, isAutorizado)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold border transition ${
+                            isAutorizado
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                              : 'bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20'
+                          }`}
+                          title="Clique para alterar permissão de compras no Fiado"
+                        >
+                          {updatingFiadoId === c.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : isAutorizado ? (
+                            <>
+                              <ToggleRight className="w-4 h-4 text-emerald-400" />
+                              <span>ON (Autorizado)</span>
+                            </>
+                          ) : (
+                            <>
+                              <ToggleLeft className="w-4 h-4 text-rose-400" />
+                              <span>OFF (Bloqueado)</span>
+                            </>
+                          )}
+                        </button>
+                      </td>
+
                       <td className="py-3 px-4 font-semibold text-zinc-300">
-                        R$ {Number(c.limite_fiado).toFixed(2).replace('.', ',')}
+                        R$ {Number(c.limite_fiado || 300).toFixed(2).replace('.', ',')}
                       </td>
                       <td className="py-3 px-4">
                         <span

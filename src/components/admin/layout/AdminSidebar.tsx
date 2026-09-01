@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Bike, Wallet, Package, Users, Wine, X, Sparkles, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Bike, Wallet, Package, Users, Wine, X, Sparkles, BarChart3, MapPin, Clock } from 'lucide-react';
 
 const MENU_ITEMS = [
   {
@@ -37,6 +37,16 @@ const MENU_ITEMS = [
     icon: Users,
   },
   {
+    label: 'CEPs de Entrega',
+    href: '/admin/ceps',
+    icon: MapPin,
+  },
+  {
+    label: 'Horário & Loja',
+    href: '/admin/horarios',
+    icon: Clock,
+  },
+  {
     label: 'Relatórios',
     href: '/admin/relatorios',
     icon: BarChart3,
@@ -52,7 +62,7 @@ export function AdminSidebar({ isOpen = false, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
 
   const SidebarContent = () => (
-    <div className="flex flex-col justify-between h-full">
+    <div className="flex flex-col justify-between h-full overflow-y-auto">
       <div className="p-5 space-y-6">
         {/* Branding Logo & Close Button for Mobile */}
         <div className="flex items-center justify-between">
@@ -95,7 +105,7 @@ export function AdminSidebar({ isOpen = false, onClose }: AdminSidebarProps) {
                 key={item.href}
                 href={item.href}
                 onClick={onClose}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition ${
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition ${
                   isActive
                     ? 'bg-[#F59E0B] text-[#0D0D0D] shadow-lg shadow-[#F59E0B]/10'
                     : 'text-zinc-400 hover:text-white hover:bg-[#222222]'

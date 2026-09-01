@@ -55,6 +55,15 @@
 - **Horário Dinâmico com Meia-Noite:** Módulo `src/lib/storeStatus.ts` tratando horários que atravessam meia-noite (ex.: 18:00 às 02:00 -> ABERTO entre 18:00–23:59 e 00:00–02:00) e alimentando o badge 🟢 ABERTO / 🔴 ENCERRADA no `Header.tsx`.
 - **Performance & Imagens:** Next.js `<Image>` com `priority={isPriority}` nos primeiros cards da viewport e lazy-loading nos demais.
 
+### Parte 6 — Melhorias no Painel ADM, Banco de Dados e Performance (Prompt 2)
+- **Controle de Fiado no ADM:** Tabela `/admin/clientes` estendida com coluna `Autorizado Fiado` e botão Switch (ON/OFF). O administrador pode ativar ou revogar a autorização de fiado por cliente em tempo real.
+- **Módulo de CEPs de Entrega (`/admin/ceps`):** CRUD completo para CEPs com taxa de frete e status.
+- **Cadastro em Massa de CEPs:** Ferramenta de colagem de lista com sanitização automática (`\D`), remoção de duplicados e RPC `public.importar_ceps_em_massa` no Postgres.
+- **Módulo de Horários & Status (`/admin/horarios`):** Painel para definir horários de abertura e fechamento com suporte a meia-noite e sobrescrita manual de status.
+- **Otimização de Índices SQL:** Migration `005_admin_performance_and_cep_indexes.sql` criando índices otimizados para `pedidos(status, criado_em)`, `clientes(whatsapp)`, `produtos(ativo, destaque)` e `ceps_atendidos(cep, ativo)`.
+- **Navegação Atualizada:** `AdminSidebar.tsx` e `MobileNav.tsx` atualizados com os ícones e rotas de CEPs de Entrega e Horário & Loja.
+
+
 
 ---
 
